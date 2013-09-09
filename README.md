@@ -50,31 +50,41 @@ generateTestSets.xls
 
 In the sketch itself the following code is required:
 
-'#define AUTOTEST
-'#ifdef AUTOTEST
+\#define AUTOTEST
+\#ifdef AUTOTEST
 
-'#include "AutomaticTesting.h"
+include "AutomaticTesting.h"
+
 void extendSerialOut(){
+
    //
    // add micros() output to Serial out
    // if more fields required separate them with a semicolon
    //
+   
    Serial.print(micros);
+   
    Serial.print(";");
+   
    Serial.print(myField);
+   
 }
 
-#endif
+\#endif
 
 You can skip AUTOTEST but that allows me to switch of automatic testing with one statement
 
 In the setup() you need to add the following statements:
 --------------------------------------------------------
 
-#ifdef AUTOTEST
- 	  Serial.begin(115200);
+\#ifdef AUTOTEST
+
+	  Serial.begin(115200);
+	  
  	  autotest.begin(extendSerialOut);
-#endif
+ 	  
+\#endif
+
 
 autotest.begin(extendSerialOut) adds the ability to extend output. Serial.begin speaks for itself
 
