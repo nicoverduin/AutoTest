@@ -2,21 +2,21 @@ AutoTest
 ========
 
 Arduino Class for automatic testing on Arduino
-@mainpage
- * \n Class methods file for capturing all pinMode(), digitalRead() and digitalWrite() operations from the program where this is included.
- * Testcases can be input to the digitalRead() calls and both read and write changes are sent to Serial in CSV format
- *\n
- * \n The approach taken is to map the actual pin number to an array index. This uses less memory (RAM). Otherwise we would
- * need to allocate memory for each pin (atmega2560 would mean > 50 pins) wich would be quite a lot of scarce RAM.
- * PinMode is used to actually set the mode for the pin.
- * digtalRead()s and digitalWrite()s map the pin to the array index an the values are either set or read
- * from pinMap.
- *\n
- * \n This approach also allows inputs and outputs to be mixed in the Excel sheet. So no need to define the inputs
- * first and then the outputs. The testcases are generated in the same order as the pin order.
- *\n
- * \n When a digitalRead Takes place, a check is made if the waiting test case is allowed to be executed. If so
- * the test case data is copied to pinMap and an actionText field. At the same time a new test case
+
+Class methods file for capturing all pinMode(), digitalRead() and digitalWrite() operations from the program where this is included.
+Testcases can be input to the digitalRead() calls and both read and write changes are sent to Serial in CSV format
+
+The approach taken is to map the actual pin number to an array index. This uses less memory (RAM). Otherwise we would
+need to allocate memory for each pin (atmega2560 would mean > 50 pins) wich would be quite a lot of scarce RAM.
+PinMode is used to actually set the mode for the pin.
+digtalRead()s and digitalWrite()s map the pin to the array index an the values are either set or read
+from pinMap.
+
+This approach also allows inputs and outputs to be mixed in the Excel sheet. So no need to define the inputs
+first and then the outputs. The testcases are generated in the same order as the pin order.
+
+When a digitalRead Takes place, a check is made if the waiting test case is allowed to be executed. If so
+the test case data is copied to pinMap and an actionText field. At the same time a new test case
  * is read into memory. We need to do it this way as the delay time before a test case becomes active is also
  * stored in the test case. The limit of testcases is 10000 although that number will probably never be reached
  * due to Flash Memory size limitations.
