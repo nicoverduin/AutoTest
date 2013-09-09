@@ -49,12 +49,11 @@ generateTestSets.xls
 
 
 In the sketch itself the following code is required:
-----------------------------------------------------
 
-#define AUTOTEST
-#ifdef AUTOTEST
+'#define AUTOTEST
+'#ifdef AUTOTEST
 
-#include "AutomaticTesting.h"
+'#include "AutomaticTesting.h"
 void extendSerialOut(){
    //
    // add micros() output to Serial out
