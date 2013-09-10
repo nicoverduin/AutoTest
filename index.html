@@ -51,7 +51,7 @@ from pinMap.</p>
 is read into memory. We need to do it this way as the delay time before a test case becomes active is also stored in the test case. The limit of testcases is 10000 although that number will probably never be reached due to Flash Memory size limitations.</p>
 
 <p>As a program will probably do a lot of reading (polling) of pins there is a method called
-`doNotDisplayReadsIf(uint8_t val)'</p>
+<code>doNotDisplayReadsIf(uint8_t val);</code></p>
 
 <p>this method allows to block the printing of data to serial out when the digitalread reads the value val. This will make the output more processable.</p>
 
@@ -85,7 +85,7 @@ Using Excel open the <strong>generate TestSets.xls</strong> and edit the <strong
 <li><strong>generateTestSets.xls</strong></li>
 </ul><p>In the sketch itself the following code is required:</p>
 
-<p>`#define AUTOTEST</p>
+<p><code>\#define AUTOTEST</code></p>
 
 <h1>
 <a name="ifdef-autotest" class="anchor" href="#ifdef-autotest"><span class="octicon octicon-link"></span></a>ifdef AUTOTEST</h1>
