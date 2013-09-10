@@ -50,8 +50,8 @@ from pinMap.</p>
 <p>When a digitalRead Takes place, a check is made if the waiting test case is allowed to be executed. If so the test case data is copied to pinMap and an actionText field. At the same time a new test case
 is read into memory. We need to do it this way as the delay time before a test case becomes active is also stored in the test case. The limit of testcases is 10000 although that number will probably never be reached due to Flash Memory size limitations.</p>
 
-<p>As a program will probably do a lot of reading (polling) of pins there is a method called &lt;
-<code>doNotDisplayReadsIf(uint8_t val)</code></p>
+<p>As a program will probably do a lot of reading (polling) of pins there is a method called
+`doNotDisplayReadsIf(uint8_t val)'</p>
 
 <p>this method allows to block the printing of data to serial out when the digitalread reads the value val. This will make the output more processable.</p>
 
@@ -110,21 +110,18 @@ Using Excel open the <strong>generate TestSets.xls</strong> and edit the <strong
 
 <p>You can skip AUTOTEST but that allows me to switch of automatic testing with one statement</p>
 
-<p>In the setup() you need to add the following statements:
-`</p>
+<p>In the setup() you need to add the following statements:</p>
 
-<h1>
-<a name="ifdef-autotest-1" class="anchor" href="#ifdef-autotest-1"><span class="octicon octicon-link"></span></a>ifdef AUTOTEST</h1>
-
-<pre><code>  Serial.begin(115200)  
-  autotest.begin(extendSerialOut);
-</code></pre>
+<p>`#ifdef AUTOTEST
+      Serial.begin(115200);<br>
+      autotest.begin(extendSerialOut);</p>
 
 <h1>
 <a name="endif-1" class="anchor" href="#endif-1"><span class="octicon octicon-link"></span></a>endif</h1>
 
-<p>`
-<strong>autotest.begin(extendSerialOut)</strong> adds the ability to extend output. Serial.begin speaks for itself</p>
+<p>`</p>
+
+<p><strong>autotest.begin(extendSerialOut)</strong> adds the ability to extend output. Serial.begin speaks for itself</p>
       </section>
     </div>
 
