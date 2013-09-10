@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="AutoTest Automatic Test Case processing on Arduino : Arduino Class for automatic testing on Arduino" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>AutoTest Automatic Test Case processing on Arduino</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/nicoverduin/AutoTest">View on GitHub</a>
+
+          <h1 id="project_title">AutoTest Automatic Test Case processing on Arduino</h1>
+          <h2 id="project_tagline">Arduino Class for automatic testing on Arduino</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/nicoverduin/AutoTest/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/nicoverduin/AutoTest/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>
+<a name="autotest" class="anchor" href="#autotest"><span class="octicon octicon-link"></span></a>AutoTest</h3>
+
+<h1>
+<a name="arduino-class-for-automatic-testing-on-arduino" class="anchor" href="#arduino-class-for-automatic-testing-on-arduino"><span class="octicon octicon-link"></span></a>Arduino Class for automatic testing on Arduino</h1>
+
+<p>Class methods file for capturing all pinMode(), digitalRead() and digitalWrite() operations from the program where this is included.
+Testcases can be input to the digitalRead() calls and both read and write changes are sent to Serial in CSV format</p>
+
+<p>The approach taken is to map the actual pin number to an array index. This uses less memory (RAM). Otherwise we would need to allocate memory for each pin (atmega2560 would mean &gt; 50 pins) which would be quite a lot of scarce RAM.
+PinMode() is used to actually set the mode for the pin. Default is INPUT
+digtalRead()s and digitalWrite()s map the pin to the array index an the values are either set or read
+from pinMap.</p>
+
+<p>This approach also allows inputs and outputs to be mixed in the Excel sheet. So no need to define the inputs first and then the outputs. The testcases are generated in the same order as the pin order.</p>
+
+<p>When a digitalRead Takes place, a check is made if the waiting test case is allowed to be executed. If so the test case data is copied to pinMap and an actionText field. At the same time a new test case
+is read into memory. We need to do it this way as the delay time before a test case becomes active is also stored in the test case. The limit of testcases is 10000 although that number will probably never be reached due to Flash Memory size limitations.</p>
+
+<p>As a program will probably do a lot of reading (polling) of pins there is a method called &lt;
+<code>doNotDisplayReadsIf(uint8_t val)</code></p>
+
+<p>this method allows to block the printing of data to serial out when the digitalread reads the value val. This will make the output more processable.</p>
+
+<p>To enable users to add more data on the Serial out, the begin() method has 2 options:</p>
+
+<ul>
+<li>begin() sets up the class without the ability to extend with user data</li>
+<li>begin(user funcion) does the same as above but enables the user to output additional data (like counters) to the serial out</li>
+</ul><h1>
+<a name="setting-up" class="anchor" href="#setting-up"><span class="octicon octicon-link"></span></a>Setting up</h1>
+
+<p>In the folder of the sketch you need to copy the files from the folder .**Put these files in your sketch Folder**
+Using Excel open the <strong>generate TestSets.xls</strong> and edit the <strong>test set</strong> sheet. I personally use the next tab <strong>test results</strong> to put my test results in.</p>
+
+<p>Next click the generate testcases button and you can compile link and upload.</p>
+
+<p>The generate button generates 3 files:</p>
+
+<ul>
+<li>
+<strong>FieldLengths.h</strong> contains field count and size defines</li>
+<li>
+<strong>PinHeaders.h</strong> contains all the pin name definitions</li>
+<li>
+<strong>TestCases.h</strong> contains all the testcases.</li>
+</ul><p>The files copied from <strong>Put these files in your sketch Folder</strong> folder are:</p>
+
+<ul>
+<li>
+<strong>AutomaticTesting.h</strong>      DO NOT MODIFY THIS FILE</li>
+<li><strong>generateTestSets.xls</strong></li>
+</ul><p>In the sketch itself the following code is required:</p>
+
+<p>`#define AUTOTEST</p>
+
+<h1>
+<a name="ifdef-autotest" class="anchor" href="#ifdef-autotest"><span class="octicon octicon-link"></span></a>ifdef AUTOTEST</h1>
+
+<h1>
+<a name="include-automatictestingh" class="anchor" href="#include-automatictestingh"><span class="octicon octicon-link"></span></a>include "AutomaticTesting.h"`</h1>
+
+<p>void extendSerialOut(){
+   //
+   // add micros() output to Serial out
+   // if more fields required separate them with a semicolon
+   //
+   Serial.print(micros);
+   Serial.print(";");<br>
+   Serial.print(myField)l<br>
+}`</p>
+
+<h1>
+<a name="endif" class="anchor" href="#endif"><span class="octicon octicon-link"></span></a>endif</h1>
+
+<p>`</p>
+
+<p>You can skip AUTOTEST but that allows me to switch of automatic testing with one statement</p>
+
+<p>In the setup() you need to add the following statements:
+`</p>
+
+<h1>
+<a name="ifdef-autotest-1" class="anchor" href="#ifdef-autotest-1"><span class="octicon octicon-link"></span></a>ifdef AUTOTEST</h1>
+
+<pre><code>  Serial.begin(115200)  
+  autotest.begin(extendSerialOut);
+</code></pre>
+
+<h1>
+<a name="endif-1" class="anchor" href="#endif-1"><span class="octicon octicon-link"></span></a>endif</h1>
+
+<p>`
+<strong>autotest.begin(extendSerialOut)</strong> adds the ability to extend output. Serial.begin speaks for itself</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">AutoTest Automatic Test Case processing on Arduino maintained by <a href="https://github.com/nicoverduin">nicoverduin</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
