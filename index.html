@@ -4,7 +4,7 @@
   <head>
     <meta charset='utf-8' />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="AutoTest Automatic Test Case processing on Arduino : Arduino Class for automatic testing on Arduino" />
+    <meta name="description" content="AutoTest Automatic Test Case processing on Arduino : Arduino Class library for automatic testing" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
@@ -19,7 +19,7 @@
           <a id="forkme_banner" href="https://github.com/nicoverduin/AutoTest">View on GitHub</a>
 
           <h1 id="project_title">AutoTest Automatic Test Case processing on Arduino</h1>
-          <h2 id="project_tagline">Arduino Class for automatic testing on Arduino</h2>
+          <h2 id="project_tagline">Arduino Class library for automatic testing</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/nicoverduin/AutoTest/zipball/master">Download this project as a .zip file</a>
@@ -85,43 +85,30 @@ Using Excel open the <strong>generate TestSets.xls</strong> and edit the <strong
 <li><strong>generateTestSets.xls</strong></li>
 </ul><p>In the sketch itself the following code is required:</p>
 
-<p><code>#define AUTOTEST</code></p>
-
-<p><code>#ifdef AUTOTEST</code></p>
-
-<p><code>#include "AutomaticTesting.h"</code></p>
-
-<p><code>void extendSerialOut(){</code></p>
-
-<p><code>//</code></p>
-
-<p><code>// add micros() output to Serial out</code></p>
-
-<p><code>// if more fields required separate them with a semicolon</code></p>
-
-<p><code>//</code></p>
-
-<p><code>Serial.print(micros());</code></p>
-
-<p><code>Serial.print(";");</code>   </p>
-
-<p><code>Serial.print(myField);</code>  </p>
-
-<p><code>}</code></p>
-
-<p><code>#endif</code></p>
+<pre><code>#define AUTOTEST
+#ifdef AUTOTEST
+#include "AutomaticTesting.h"
+void extendSerialOut(){
+   //
+   // add micros() output to Serial out
+   // if more fields required separate them with a semicolon
+   //
+   Serial.print(micros());
+   Serial.print(";");   
+   Serial.print(myField);  
+}
+#endif
+</code></pre>
 
 <p>You can skip AUTOTEST but that allows me to switch of automatic testing with one statement</p>
 
 <p>In the setup() you need to add the following statements:</p>
 
-<p><code>#ifdef AUTOTEST</code></p>
-
-<p><code>Serial.begin(115200);</code></p>
-
-<p><code>autotest.begin(extendSerialOut);</code></p>
-
-<p><code>#endif</code></p>
+<pre><code>#ifdef AUTOTEST
+Serial.begin(115200);  
+autotest.begin(extendSerialOut);
+#endif`
+</code></pre>
 
 <p><strong>autotest.begin(extendSerialOut)</strong> adds the ability to extend output. Serial.begin speaks for itself</p>
       </section>
