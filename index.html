@@ -85,41 +85,43 @@ Using Excel open the <strong>generate TestSets.xls</strong> and edit the <strong
 <li><strong>generateTestSets.xls</strong></li>
 </ul><p>In the sketch itself the following code is required:</p>
 
-<p><code>\#define AUTOTEST</code></p>
+<p><code>#define AUTOTEST</code></p>
 
-<h1>
-<a name="ifdef-autotest" class="anchor" href="#ifdef-autotest"><span class="octicon octicon-link"></span></a>ifdef AUTOTEST</h1>
+<p><code>#ifdef AUTOTEST</code></p>
 
-<h1>
-<a name="include-automatictestingh" class="anchor" href="#include-automatictestingh"><span class="octicon octicon-link"></span></a>include "AutomaticTesting.h"`</h1>
+<p><code>#include "AutomaticTesting.h"</code></p>
 
-<p>void extendSerialOut(){
-   //
-   // add micros() output to Serial out
-   // if more fields required separate them with a semicolon
-   //
-   Serial.print(micros);
-   Serial.print(";");<br>
-   Serial.print(myField)l<br>
-}`</p>
+<p><code>void extendSerialOut(){</code></p>
 
-<h1>
-<a name="endif" class="anchor" href="#endif"><span class="octicon octicon-link"></span></a>endif</h1>
+<p><code>//</code></p>
 
-<p>`</p>
+<p><code>// add micros() output to Serial out</code></p>
+
+<p><code>// if more fields required separate them with a semicolon</code></p>
+
+<p><code>//</code></p>
+
+<p><code>Serial.print(micros());</code></p>
+
+<p><code>Serial.print(";");</code>   </p>
+
+<p><code>Serial.print(myField);</code>  </p>
+
+<p><code>}</code></p>
+
+<p><code>#endif</code></p>
 
 <p>You can skip AUTOTEST but that allows me to switch of automatic testing with one statement</p>
 
 <p>In the setup() you need to add the following statements:</p>
 
-<p>`#ifdef AUTOTEST
-      Serial.begin(115200);<br>
-      autotest.begin(extendSerialOut);</p>
+<p><code>#ifdef AUTOTEST</code></p>
 
-<h1>
-<a name="endif-1" class="anchor" href="#endif-1"><span class="octicon octicon-link"></span></a>endif</h1>
+<p><code>Serial.begin(115200);</code></p>
 
-<p>`</p>
+<p><code>autotest.begin(extendSerialOut);</code></p>
+
+<p><code>#endif</code></p>
 
 <p><strong>autotest.begin(extendSerialOut)</strong> adds the ability to extend output. Serial.begin speaks for itself</p>
       </section>
