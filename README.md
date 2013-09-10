@@ -22,7 +22,7 @@ this method allows to block the printing of data to serial out when the digitalr
 
 To enable users to add more data on the Serial out, the begin() method has 2 options:
 * begin() sets up the class without the ability to extend with user data
-* begin(user funcion) does the same as above but enables the user to output additional data (like counters) to the serial out
+* begin(user function) does the same as above but enables the user to output additional data (like counters) to the serial out
 
 # Setting up
 In the folder of the sketch you need to copy the files from the folder .**Put these files in your sketch Folder**
