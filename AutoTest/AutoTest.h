@@ -14,9 +14,9 @@
  * Latest Revsion
  * ____________________
  *
- * Revision	: $Revision$
- * Date		: $Date$
- * Author	: $Author$
+ * Revision	: $Revision: 7 $
+ * Date		: $Date: 2013-09-11 19:06:55 +0200 (Wed, 11 Sep 2013) $
+ * Author	: $Author: Nico $
  *
  */
 
@@ -44,8 +44,10 @@ public:
 
 	void begin(void (*)());								// initialize the auto test with an extend display pins function
 	void begin();										// initializes the AutoTest with no extend display function
-	int  callDigitalRead(uint8_t pin);					// replacement function for digitalRead()
+	uint8_t  callDigitalRead(uint8_t pin);					// replacement function for digitalRead()
+	int  callAnalogRead(uint8_t pin);					// replacement function for analogRead()
 	void callDigitalWrite(uint8_t pin, uint8_t val);	// replacement function for digitalWrite()
+	void callAnalogWrite(uint8_t pin, uint8_t val);		// replacement function for analogWrite()
 	void callPinMode(uint8_t pin, uint8_t mode);		// replacement function for pinMode()
 	void doNotDisplayReadsIf(uint8_t val);				// omits displaying pin info if pin in Read has value x
 
@@ -54,7 +56,7 @@ private:
 	// variables used for activating a new test case
 	//
 	int				nextTestCaseNumber;					// number of next test case
-	uint8_t			* nextInputValues;					// array containing the input values for the next test case.
+	uint16_t		* nextInputValues;					// array containing the input values for the next test case.
 	unsigned long 	activationDelay;					// delay before the next test case is activated
 	unsigned long 	activateTestCase;					// moment when to activate the test case
 	PGM_P			testCasePtr;						// points to current Test case in FLASH
@@ -73,12 +75,17 @@ private:
 	char			actionText[26];						// Action test to display with output (max 25 positions)
 	//
 	// Array created to the number of pins defined in the excel sheet. Memory is allocated during the construction
-	// pinMap has 3 columns:
+	// pinMap has 2 columns:
 	// column 0 reference to real pin number
 	// column 1 mode (INPUT, OUTPUT, INPUT_PULLUP)
-	// column 2 Value (= value set by test case or digitalWrite)
 	//
-	uint8_t *pinMap;
+	uint8_t 		*pinMap;			// maps the pins
+	//
+	// pinVal corresponds to pinMap and contains the values. The reason to do it this way
+	// is to allow analog values for the pin which can have a value from 0-1023
+	//
+	uint16_t		*pinVal;			// maps to digital or analog values
+
 	//
 	// pinDescriptions contains an array with the names of each pin. Memory is allocated during the construction
 	//
@@ -92,6 +99,7 @@ private:
 	int 	getRecordLength(PGM_P);						// gets the length of a record from Flash
 	uint8_t getPinIndex(uint8_t);						// searches pin Array and returns index for pin
 	PGM_P 	getToken(PGM_P sourcePtr, char * destPtr, uint8_t token); // copies a string up to a token
+	void	activateNextTestCase();						// activates the loaded testcase
 
 };
 

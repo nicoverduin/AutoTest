@@ -11,9 +11,9 @@
  * Latest Revsion
  * ____________________
  *
- * Revision	: $Revision$
- * Date		: $Date$
- * Author	: $Author$
+ * Revision	: $Revision: 7 $
+ * Date		: $Date: 2013-09-11 19:06:55 +0200 (Wed, 11 Sep 2013) $
+ * Author	: $Author: Nico $
  *
  */
 
@@ -42,8 +42,11 @@ AutoTest autotest(NUMBER_OF_PINS,NUMBER_OF_INPUT_PINS,MAX_FIELD_LENGTH,MAX_DESCR
 //
 // redefine functions to replace the original pinMode(), digitalRead() and digitalWrite() functions
 //
+
 #define pinMode(a,b)		autotest.callPinMode(a,b)
 #define digitalRead(a)		autotest.callDigitalRead(a)
 #define digitalWrite(a,b)	autotest.callDigitalWrite(a, b)
+#define analogRead(a)		autotest.callAnalogRead(a)
+#define analogWrite(a,b)	autotest.callAnalogWrite(a, b)
 
 #endif /* AUTOMATIC_TESTING_H */

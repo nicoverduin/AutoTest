@@ -14,13 +14,13 @@
  * need to allocate memory for each pin (atmega2560 would mean > 50 pins) wich would be quite a lot of scarce RAM.
  * PinMode is used to actually set the mode for the pin.
  * digtalRead()s and digitalWrite()s map the pin to the array index an the values are either set or read
- * from pinMap.
+ * from pinVAL which is mapped parallel to pinMap.
  *\n
  * \n This approach also allows inputs and outputs to be mixed in the Excel sheet. So no need to define the inputs
  * first and then the outputs. The testcases are generated in the same order as the pin order.
  *\n
  * \n When a digitalRead Takes place, a check is made if the waiting test case is allowed to be executed. If so
- * the test case data is copied to pinMap and an actionText field. At the same time a new test case
+ * the test case data is copied to pinVAL and an actionText field. At the same time a new test case
  * is read into memory. We need to do it this way as the delay time before a test case becomes active is also
  * stored in the test case. The limit of testcases is 10000 although that number will probably never be reached
  * due to Flash Memory size limitations.
@@ -86,9 +86,9 @@
  * Latest Revsion
  * ____________________
  *
- * Revision	: $Revision$
- * Date		: $Date$
- * Author	: $Author$
+ * Revision	: $Revision: 7 $
+ * Date		: $Date: 2013-09-11 19:06:55 +0200 (Wed, 11 Sep 2013) $
+ * Author	: $Author: Nico $
  *
  */
 #include <Arduino.h>
@@ -131,11 +131,12 @@ AutoTest::AutoTest(	uint8_t numberOfPins		,
 	pinHeaders 				= pointerPinHeaders;
 	testCases				= pointerTestCases;
 	//
-	// allocate arrays
+	// allocate arrays with the correct sizes and quantities
 	//
-	nextInputValues 		= (uint8_t *) malloc(Number_Of_Input_Pins);
-	pinMap					= (uint8_t *) malloc((numberOfPins * 3));
-	pinDescriptions 		= (char *) 	  malloc((numberOfPins * maxFieldLength));
+	nextInputValues 		= (uint16_t *) 	malloc(Number_Of_Input_Pins * sizeof(uint16_t));
+	pinMap					= (uint8_t *) 	malloc((numberOfPins * sizeof(uint8_t)));
+	pinVal					= (uint16_t *) 	malloc(numberOfPins * sizeof(uint16_t));
+	pinDescriptions 		= (char *) 	  	malloc((numberOfPins * maxFieldLength));
 	//
 	// other initializations
 	//
@@ -187,17 +188,17 @@ void AutoTest::_begin(){
 	uint8_t			numberOfPins;			// keeps track of pins while loading arrays
 
 	//
-	// initialize the pinMap
+	// initialize the pinMap & pinVal
 	//
 	uint8_t j = 0;
 	for (uint8_t i = 0; i < Number_Of_Pins; i++) {
 		//
 		// calculate array offset
 		//
-		j = i * 3;
+		j = i * 2;
 		pinMap[j] 	= 255;			// default value for pin not used
 		pinMap[j+1]	= INPUT;		// default all pins are set to INPUT
-		pinMap[j+2] = 0;			// default value = 0
+		pinVal[i] 	= 0;			// default value = 0
 	}
 
 	//
@@ -218,7 +219,7 @@ void AutoTest::_begin(){
 		//
 		recordPtr 				= getToken(recordPtr, pin, ',');// find the pin number and copy it to RAM
 		iPin 					= atoi(pin);					// convert to int
-		pinMap[numberOfPins * 3]= iPin;							// and save it in the array. This keeps the order of the Excel file
+		pinMap[numberOfPins * 2]= iPin;							// and save it in the array. This keeps the order of the Excel file
 		//
 		// getToken returns the first byte address after the token so we can continue to the next fiedl
 		//
@@ -233,6 +234,7 @@ void AutoTest::_begin(){
 		//
 		recordLength 	= getRecordLength(recordPtr);
 	}
+
 	//
 	// We now have an array with all the input / output pins used in the same order as the Excel sheet
 	//
@@ -264,14 +266,14 @@ void AutoTest::callPinMode(uint8_t pin, uint8_t mode) {		// replacement function
 		//
 		// we found the index in the pinMap array so set mode
 		//
-		pinMap[((pinIndex * 3)+1)] = mode;
+		pinMap[((pinIndex * 2)+1)] = mode;
 		//
 		// set pin value. If mode is PULLUP then the input value is default 1
 		//
 		if (mode == INPUT || mode == OUTPUT) {
-			pinMap[((pinIndex * 3) + 2)] = LOW;					// default value is 0
+			pinVal[pinIndex] = LOW;					// default value is 0
 		} else {
-			pinMap[((pinIndex * 3) + 2)] = HIGH;					// with pullup it is 1
+			pinVal[pinIndex] = HIGH;				// with pullup it is 1
 		}
 	} else {
 		//
@@ -293,46 +295,12 @@ void AutoTest::callPinMode(uint8_t pin, uint8_t mode) {		// replacement function
  * rerouting of standard digitalRead function. This function reads the pin from the digital Array. However if
  * a testcase becomes active, the value from the test set is written to it before the read takes place
  */
-int AutoTest::callDigitalRead(uint8_t pin) {		// replacement function for digitalRead()
+uint8_t AutoTest::callDigitalRead(uint8_t pin) {		// replacement function for digitalRead()
 	uint8_t 	pinIndex;							// mapping pin to pinMap
 	uint8_t		val;								// value to return
 
-	//
-	// check if there are anymore testcases
-	//
-	if (nextTestCaseNumber != 10000) {
-		//
-		// now check if we can activate this Testcase
-		//
-		if (millis() > activateTestCase) {
-			//
-			// time to activate the testcase
-			// copy the test case description
-			//
-			strcpy(actionText, nextTestCaseDescription);
-			//
-			// copy the only the input pins
-			//
-			uint8_t j = 0;
-			for (uint8_t i = 0; i < Number_Of_Pins; i++) {
-				if(pinMap[((i * 3) + 1)] == INPUT || pinMap[((i * 3) + 1)] == INPUT_PULLUP){
-					//
-					// this is an input pin
-					//
-					pinMap[((i * 3) + 2)] = nextInputValues[j];
-					j++;
-				}
-			}
-			//
-			// and let the user know this test cases is activated
-			//
-			displayPins();
-			//
-			// set the next testcase ready
-			//
-			getTestCase();
-		}
-	}
+	activateNextTestCase();								// if there is a testcase, it gets Activated
+														// if not it is ignored and all values stay the same
 	pinIndex = getPinIndex(pin);
 	//
 	// check if it is a valid pin
@@ -341,7 +309,7 @@ int AutoTest::callDigitalRead(uint8_t pin) {		// replacement function for digita
 		//
 		// get value
 		//
-		val = pinMap[((pinIndex * 3)  + 2)];
+		val = pinVal[pinIndex];
 		//
 		// check if we actually have to display this info
 		//
@@ -369,6 +337,71 @@ int AutoTest::callDigitalRead(uint8_t pin) {		// replacement function for digita
 		return 0;
 	}
 }
+/**
+ * @name callAnalogRead(int pin)
+ * @param pin 	Analog pin number of Arduino board
+ * @return int	value read from Pin
+ * rerouting of standard digitalRead function. This function reads the pin from the digital Array. However if
+ * a testcase becomes active, the value from the test set is written to it before the read takes place
+ */
+int AutoTest::callAnalogRead(uint8_t pin) {			// replacement function for digitalRead()
+	uint8_t 	 pinIndex;							// mapping pin to pinMap
+	int  		 val;								// value to return (0 - 1023)
+
+	activateNextTestCase();							// if there is a testcase, it gets Activated
+													// if not it is ignored and all values stay the same
+	//
+	// borrowed this from the original to convert a channel to the correct pin
+	//
+	#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+	if (pin < 54) pin += 54; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega32U4__)
+	if (pin < 18) pin += 18; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
+	if (pin < 24) pin += 24; // allow for channel or pin numbers
+#elif defined(analogPinToChannel) && (defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__))
+	pin = analogPinToChannel(pin);
+#else
+	if (pin < 14) pin += 14; // allow for channel or pin numbers
+#endif
+
+	pinIndex = getPinIndex(pin);
+	//
+	// check if it is a valid pin
+	//
+	if (pinIndex != Number_Of_Pins) {
+		//
+		// get value
+		//
+		val = pinVal[pinIndex];
+		//
+		// check if we actually have to display this info
+		//
+		if (val != omitDisplayIf) {
+			//
+			// now inform the user of this read
+			//
+			strcpy(actionText, "pin ");
+			strcat(actionText, (char *)&pinDescriptions[(pinIndex * Max_Field_Length)]);
+			strcat(actionText, " read");
+			displayPins();
+		}
+		//
+		// and return the test case value for this pin
+		//
+		return val;
+	} else {
+		//
+		// this pin is not defined in the test set so let the user know
+		//
+		Serial.println("");
+		Serial.print("analogRead(");
+		Serial.print(pin);
+		Serial.println(") invalid pin");
+		return 0;
+	}
+}
+
 /**
  * @name callDigitalWrite(uint8_t pin, uint8_t val)
  * @param pin 	pin number of Arduino board
@@ -404,7 +437,7 @@ void AutoTest::callDigitalWrite(uint8_t pin, uint8_t val) {		// replacement func
 			//
 			// evrything is valid so perform write
 			//
-			pinMap[((pinIndex * 3) + 2)] = val;
+			pinVal[pinIndex] = val;
 			//
 			// now inform the user of this write
 			//
@@ -419,6 +452,50 @@ void AutoTest::callDigitalWrite(uint8_t pin, uint8_t val) {		// replacement func
 			strcat(actionText, level);
 			displayPins();
 		}
+	} else {
+		//
+		// this pin is not defined in the test set so let the user know
+		//
+		Serial.println("");
+		Serial.print("digitalWrite(");
+		Serial.print(pin);
+		Serial.print(",");
+		Serial.print(val);
+		Serial.println(") invalid pin");
+	}
+}
+/**
+ * @name callAnalogWrite(uint8_t pin, uint8_t val)
+ * @param pin 	pin number of Arduino board
+ * @param val	value to write to PWM pin
+ * rerouting of standard digitalWrite function. this function sets the pin value in the pinArray (containing all digital pins)
+ * Keep in mind we do not check if this is a valid PWM pin
+ */
+void AutoTest::callAnalogWrite(uint8_t pin, uint8_t val) {		// replacement function for digitalWrite()
+
+	uint8_t pinIndex;					// maps the pin to the pinMap array index
+	char valString[4];					// string value of pwm value
+	//
+	// set the correct value
+	//
+	pinIndex		= getPinIndex(pin);	// get pinMap index
+	//
+	// check if it is a valid pin
+	//
+	if (pinIndex < Number_Of_Pins) {
+		//
+		// No need to check the value as it can be any value from 0-255
+		//
+		pinVal[pinIndex] = val;
+		//
+		// now inform the user of this write
+		//
+		strcpy(actionText, "pin ");
+		strcat(actionText, (char *)&pinDescriptions[(pinIndex * Max_Field_Length)]);
+		strcat(actionText, " set to ");
+		itoa(val, valString, 10);
+		strcat(actionText, valString);
+		displayPins();
 	} else {
 		//
 		// this pin is not defined in the test set so let the user know
@@ -450,7 +527,7 @@ void AutoTest::displayPins() {
 	// check each pin if it is defined in the program. Defined means it was programmed through pinMode()
 	//
 	for (uint8_t i = 0; i < Number_Of_Pins; i++) {
-		Serial.print(pinMap[((i * 3) + 2)]);		// print Value
+		Serial.print(pinVal[i]);		// print Value
 		Serial.print(CSV_SEPARATOR);				// print a separator
 	}
 	//
@@ -468,10 +545,10 @@ void AutoTest::displayPins() {
  */
 uint8_t AutoTest::getTestCase(){
 
-	uint8_t returnCode;						// result of this operation
-	char	pinValue[2];					// value of pin as a string
-	char	delayTime[10];					// delay time as string
-	unsigned int recordLength;				// returns the length of a record in testcases
+	uint8_t  returnCode;				// result of this operation
+	char	 pinValue[5];				// value of pin as a string (could be 0-1023
+	char	 delayTime[10];				// delay time as string
+	uint16_t recordLength;				// returns the length of a record in testcases
 
 	//
 	// check if there is any testcase left
@@ -604,7 +681,7 @@ uint8_t AutoTest::getPinIndex(uint8_t pin) {
 	// search the array
 	//
 	for (uint8_t i = 0; i < Number_Of_Pins; i++) {
-		if (pinMap[(i * 3)] == pin) {
+		if (pinMap[(i * 2)] == pin) {
 			//
 			// found it and save i for the exit
 			//
@@ -616,4 +693,48 @@ uint8_t AutoTest::getPinIndex(uint8_t pin) {
 	// return the found value or the out of bounds value
 	//
 	return returnPin;
+}
+/**
+ * @name activateTestcase()
+ * Activates the current load testcase if there is one
+ */
+void AutoTest::activateNextTestCase(){
+	//
+	// check if there are anymore testcases
+	//
+	if (nextTestCaseNumber != 10000) {
+		//
+		// now check if we can activate this Testcase
+		//
+		if (millis() > activateTestCase) {
+			//
+			// time to activate the testcase
+			// copy the test case description
+			//
+			strcpy(actionText, nextTestCaseDescription);
+			//
+			// copy the only the input pins
+			//
+			uint8_t j = 0;
+			for (uint8_t i = 0; i < Number_Of_Pins; i++) {
+				if(pinMap[((i * 2) + 1)] == INPUT || pinMap[((i * 2) + 1)] == INPUT_PULLUP){
+					//
+					// this is an input pin. If an analog read takes place this should still work fine
+					// als all pins are defined as INPUT
+					//
+					pinVal[i] = nextInputValues[j];
+					j++;
+				}
+			}
+			//
+			// and let the user know this test cases is activated
+			//
+			displayPins();
+			//
+			// set the next testcase ready
+			//
+			getTestCase();
+		}
+	}
+
 }
